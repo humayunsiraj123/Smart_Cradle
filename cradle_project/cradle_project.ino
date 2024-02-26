@@ -18,9 +18,9 @@ Servo servo;
 
 // Replace with your network credentials
 const char* ssid = "hcn sar 03212323255";
-const char* password = "humayunsj789";
-String phoneNumber = "+923162725716";
-String apiKey = "7320191";
+const char* password = "";
+String phoneNumber = "";
+String apiKey = "";
 // Set web server port number to 80
 AsyncWebServer server(80);
 
