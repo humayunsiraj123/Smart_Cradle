@@ -2,6 +2,7 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <UrlEncode.h>
+#include "ESP32_MailClient.h"
 //
 // WARNING!!! PSRAM IC required for UXGA resolution and high JPEG quality
 //            Ensure ESP32 Wrover Module or other board with PSRAM is selected
@@ -38,8 +39,34 @@
 // ===========================
 const char* ssid = "hcn sar 03212323255";
 const char* password = "humayunsj789";
-String phoneNumber = "+923162725716";
-String apiKey = "7320191";
+String phoneNumber = "0";
+String apiKey = "0";
+
+#define SMTP_HOST "smtp.gmail.com"
+#define SMTP_PORT 465
+
+
+
+
+/* The sign in credentials */
+#define AUTHOR_EMAIL "smartcradle5@gmail.com"
+#define AUTHOR_PASSWORD "qsgrmmijxjcujobk"
+/* Recipient's email*/
+#define RECIPIENT_EMAIL "humayunsiraj0@gmail.com"
+#define emailSenderAccount    "smartcradle5@gmail.com"    // Sender email address
+#define emailSenderPassword  "qsgrmmijxjcujobk"       // Sender email password
+#define smtpServer            "smtp.gmail.com"
+#define smtpServerPort        465
+#define emailSubject          "CRADLE ALERT"   // Email subject
+String inputMessage ="humayunsiraj0@gmail.com";   //Reciepent email alert
+String enableEmailChecked = "checked";
+String inputMessage2 = "true";
+// Flag variable to keep track if email notification was sent or not
+bool emailSent = false;
+/* Declare the global used SMTPSession object for SMTP transport */
+SMTPData smtpData;
+
+
 
 void startCameraServer();
 void setupLedFlash(int pin);
@@ -174,10 +201,17 @@ void setup() {
   Serial.print("Camera Ready! Use 'http://");
   Serial.print(WiFi.localIP());
   Serial.println("' to connect");
-String ip = "the webserver IP is " + String(WiFi.localIP().toString());
+String ip = "Camera Streaming ip is " + String(WiFi.localIP().toString());
   Serial.print(ip);
   //sendMessage(WiFi.localIP().toString());
   sendMessage(ip);
+    if(sendEmailNotification(ip)) {
+        //Serial.println(emailMessage);
+        emailSent = true;
+      }
+      else {
+        Serial.println("Email failed to send");
+      }
 
 }
 
@@ -185,4 +219,47 @@ String ip = "the webserver IP is " + String(WiFi.localIP().toString());
 void loop() {
   // Do nothing. Everything is done in another task by the web server
   delay(10000);
+}
+
+bool sendEmailNotification(String emailMessage)
+{
+  // Set the SMTP Server Email host, port, account and password
+  smtpData.setLogin(smtpServer, smtpServerPort, emailSenderAccount, emailSenderPassword);
+  
+  smtpData.setSender("Smart_Cradle_STREAMING", emailSenderAccount);
+  
+  // Set Email priority or importance High, Normal, Low or 1 to 5 (1 is highest)
+  smtpData.setPriority("High");
+  
+  // Set the subject
+  smtpData.setSubject(emailSubject);
+  
+  // Set the message with HTML format
+  smtpData.setMessage(emailMessage, true);
+  
+  // Add recipients
+  smtpData.addRecipient(inputMessage);
+  smtpData.setSendCallback(sendCallback);
+  
+  if (!MailClient.sendMail(smtpData)) 
+{
+    Serial.println("Error sending Email, " + MailClient.smtpErrorReason());
+    return false;
+  }
+ 
+  smtpData.empty();
+  return true;
+}
+ 
+ 
+void sendCallback(SendStatus msg) 
+{
+  // Print the current status
+  Serial.println(msg.info());
+  
+  // Do something when complete
+  if (msg.success()) 
+{
+    Serial.println("----------------");
+  }
 }
